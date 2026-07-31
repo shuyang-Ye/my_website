@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Utility Functions and Insurance Decisions · Hurricane Risk Simulator</title>
+<style>
+  :root{
+    --bg:#f6f4ee;
+    --card:#ffffff;
+    --ink:#20201c;
+    --sub:#6b6a63;
+    --line:#e1ded3;
+    --neutral:#5f6b7a;
+    --neutral-bg:#eef1f4;
+    --averse:#0f6e56;
+    --averse-bg:#e1f5ee;
+    --loving:#993c1d;
+    --loving-bg:#faece7;
+    --accent:#185fa5;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Georgia","Iowan Old Style","Palatino Linotype",-apple-system,"Segoe UI",serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.6;
+  }
+  .wrap{max-width:1240px;margin:0 auto;padding:36px 24px 80px;}
+  header{margin-bottom:8px;}
+  h1{
+    font-size:30px;
+    font-weight:700;
+    margin:0 0 6px;
+    letter-spacing:0.5px;
+  }
+  .lead{
+    color:var(--sub);
+    font-size:15px;
+    max-width:760px;
+    margin:0 0 28px;
+  }
+  .scenario{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px 24px;
+    margin-bottom:28px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:28px;
+    align-items:center;
+  }
+  .scenario .story{
+    flex:1 1 300px;
+    font-size:14px;
+    color:var(--sub);
+  }
+  .scenario .story b{color:var(--ink);}
+  .slider-block{flex:1 1 260px;}
+  .slider-block label{
+    display:flex;
+    justify-content:space-between;
+    font-size:13px;
+    color:var(--sub);
+    margin-bottom:6px;
+  }
+  .slider-block b{color:var(--ink);font-weight:700;}
+  input[type=range]{
+    width:100%;
+    accent-color:var(--accent);
+  }
+  .hint{
+    font-size:12px;
+    color:var(--sub);
+    margin-top:4px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+  }
+  @media(max-width:980px){.grid{grid-template-columns:1fr;}}
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .card-head{border-bottom:1px solid var(--line);padding-bottom:12px;}
+  .tag{
+    display:inline-block;
+    font-size:11px;
+    padding:3px 9px;
+    border-radius:999px;
+    font-weight:700;
+    letter-spacing:0.5px;
+    margin-bottom:8px;
+  }
+  .tag.neutral{background:var(--neutral-bg);color:var(--neutral);}
+  .tag.averse{background:var(--averse-bg);color:var(--averse);}
+  .tag.loving{background:var(--loving-bg);color:var(--loving);}
+  .card-head h2{margin:0 0 4px;font-size:18px;}
+  .formula{
+    font-family:"Times New Roman",Georgia,serif;
+    font-style:italic;
+    font-size:15px;
+    color:var(--ink);
+  }
+  .curvature{font-size:12.5px;color:var(--sub);margin-top:4px;}
+  svg.chart{width:100%;height:auto;touch-action:none;}
+  .drag-hint{font-size:11.5px;color:var(--sub);text-align:center;margin-top:-6px;}
+  .stats{
+    font-size:13px;
+    border-top:1px dashed var(--line);
+    padding-top:12px;
+  }
+  .stats .row{
+    display:flex;
+    justify-content:space-between;
+    padding:3px 0;
+  }
+  .stats .row span:first-child{color:var(--sub);}
+  .stats .row span:last-child{font-variant-numeric:tabular-nums;font-weight:600;}
+  .stats .divider{
+    border-top:1px solid var(--line);
+    margin:8px 0;
+  }
+  .decision{
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:13.5px;
+    font-weight:600;
+    display:flex;
+    gap:8px;
+    align-items:flex-start;
+  }
+  .decision.buy{background:var(--averse-bg);color:var(--averse);}
+  .decision.skip{background:var(--loving-bg);color:var(--loving);}
+  .decision.indiff{background:var(--neutral-bg);color:var(--neutral);}
+  .decision .sub{font-weight:400;display:block;margin-top:3px;color:inherit;opacity:0.85;}
+  .point-label{font-size:10.5px;}
+  footer{
+    margin-top:34px;
+    font-size:12.5px;
+    color:var(--sub);
+    border-top:1px solid var(--line);
+    padding-top:16px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Utility Functions and Insurance Decisions</h1>
+    <p class="lead">The same hurricane, the same wealth numbers — drag the two dots on each chart (wealth with no disaster / with disaster), or adjust the probability, and watch how three different utility function shapes lead to three completely different insurance decisions.</p>
+  </header>
+
+  <div class="scenario">
+    <div class="story">
+      A Florida homeowner faces the same hurricane risk: <b>wealth of $<span id="storyWno">400</span>k with no hurricane</b>, <b>wealth of $<span id="storyWdis">200</span>k if the hurricane hits</b>, with a <b><span id="storyP">5</span>%</b> probability of the hurricane occurring. All three homeowners face the identical risk — but different utility function shapes lead them to different decisions.
+    </div>
+    <div class="slider-block">
+      <label>Hurricane probability p <b><span id="pVal">5%</span></b></label>
+      <input type="range" id="pSlider" min="0" max="100" value="5" step="1">
+      <div class="hint">Drag the dots directly on the charts to change either state's wealth value (in $10k units)</div>
+    </div>
+  </div>
+
+  <div class="grid" id="cardGrid"></div>
+
+  <footer>
+    The comparison between E[U(W)] and U(E[W]) follows from Jensen's inequality: when the utility function is concave (U''&lt;0), E[U(W)] &lt; U(E[W]) — meaning a certain sum of money is "worth more" than a fluctuating one of the same average value. This is the mathematical basis for why insurance exists. Risk premium RP = E(W) − CE, where CE (certainty equivalent) is the inverse utility function evaluated at E[U(W)].
+  </footer>
+</div>
+
+<script>
+const TYPES = [
+  {
+    key:'neutral', label:'Risk neutral', tagClass:'neutral',
+    formula:'U(W) = W', curvature:"U''(W) = 0 — straight line",
+    color:'#185fa5', bg:'#e6f1fb', bgSoft:'#eef1f4',
+    f: w => w,
+    finv: u => u
+  },
+  {
+    key:'averse', label:'Risk averse', tagClass:'averse',
+    formula:'U(W) = ln(W)', curvature:"U''(W) < 0 — concave",
+    color:'#0f6e56', bg:'#e1f5ee', bgSoft:'#e1f5ee',
+    f: w => Math.log(w),
+    finv: u => Math.exp(u)
+  },
+  {
+    key:'loving', label:'Risk loving', tagClass:'loving',
+    formula:'U(W) = W²', curvature:"U''(W) > 0 — convex",
+    color:'#993c1d', bg:'#faece7', bgSoft:'#faece7',
+    f: w => w*w,
+    finv: u => Math.sqrt(Math.max(u,0))
+  }
+];
+
+const WMIN = 1, WMAX = 60;
+const PXMIN = 46, PXMAX = 300;
+const PYTOP = 26, PYBOT = 190;
+
+let state = { Wno: 40, Wdis: 20, p: 0.05 };
+let dragging = null; // {typeKey, point:'A'|'B'}
+
+function wToPx(w){ return PXMIN + (w - WMIN)/(WMAX - WMIN) * (PXMAX - PXMIN); }
+function pxToW(px){
+  let w = WMIN + (px - PXMIN)/(PXMAX - PXMIN) * (WMAX - WMIN);
+  return Math.max(WMIN, Math.min(WMAX, Math.round(w*2)/2));
+}
+function uToPy(u, uMin, uMax){
+  if(uMax === uMin) return (PYTOP+PYBOT)/2;
+  return PYBOT - (u - uMin)/(uMax - uMin) * (PYBOT - PYTOP);
+}
+
+function fmt(n, d=2){
+  if(!isFinite(n)) return '—';
+  return Number(n.toFixed(d)).toLocaleString('en-US', {maximumFractionDigits:d});
+}
+function money(n, d=1){
+  return fmt(n*10, d);
+}
+
+function buildCard(type){
+  const wrap = document.createElement('div');
+  wrap.className = 'card';
+  wrap.innerHTML = `
+    <div class="card-head">
+      <span class="tag ${type.tagClass}">${type.label}</span>
+      <h2>${type.label} homeowner</h2>
+      <div class="formula">${type.formula}</div>
+      <div class="curvature">${type.curvature}</div>
+    </div>
+    <svg class="chart" viewBox="0 0 340 210" data-type="${type.key}"></svg>
+    <div class="drag-hint">Drag the orange dot (no disaster) or blue dot (disaster) to change wealth</div>
+    <div class="stats" data-stats="${type.key}"></div>
+    <div class="decision" data-decision="${type.key}"></div>
+  `;
+  return wrap;
+}
+
+function renderChart(svg, type){
+  const uMin = type.f(WMIN);
+  const uMax = type.f(WMAX);
+
+  const Wno = state.Wno, Wdis = state.Wdis, p = state.p;
+  const EW = (1-p)*Wno + p*Wdis;
+  const Uno = type.f(Wno), Udis = type.f(Wdis);
+  const EU = (1-p)*Uno + p*Udis;
+  const U_EW = type.f(EW);
+
+  // sample curve
+  let d = '';
+  for(let w = WMIN; w <= WMAX; w += 1){
+    const x = wToPx(w);
+    const y = uToPy(type.f(w), uMin, uMax);
+    d += (w === WMIN ? 'M' : 'L') + x.toFixed(1) + ' ' + y.toFixed(1) + ' ';
+  }
+
+  const Apx = wToPx(Wno), Apy = uToPy(Uno, uMin, uMax);
+  const Bpx = wToPx(Wdis), Bpy = uToPy(Udis, uMin, uMax);
+  const Mpx = wToPx(EW), Mpy = uToPy(EU, uMin, uMax);
+  const Npx = wToPx(EW), Npy = uToPy(U_EW, uMin, uMax);
+
+  const gapY = Math.min(Mpy, Npy);
+  const gapH = Math.abs(Mpy - Npy);
+
+  // Certainty equivalent: the wealth CE such that U(CE) = E[U(W)].
+  // It sits on the curve at the same height as the E[U(W)] point.
+  const CE = type.finv(EU);
+  const CEpx = wToPx(CE);
+  const CEpy = Mpy;
+  const CE_COLOR = '#8e44ad';
+  const RP_COLOR = '#d6336c';
+  const showCE = type.key !== 'neutral';
+  const rpLeft = Math.min(CEpx, Npx), rpRight = Math.max(CEpx, Npx);
+  const rpMid = (CEpx + Npx) / 2;
+
+  svg.innerHTML = `
+    <line x1="${PXMIN}" y1="${PYBOT}" x2="${PXMAX+8}" y2="${PYBOT}" stroke="var(--line)" stroke-width="1"/>
+    <line x1="${PXMIN}" y1="${PYBOT}" x2="${PXMIN}" y2="${PYTOP-6}" stroke="var(--line)" stroke-width="1"/>
+    <text x="${PXMAX+4}" y="${PYBOT+16}" font-size="10" fill="var(--sub)" text-anchor="end">W ($10k)</text>
+    <text x="${PXMIN}" y="${PYTOP-10}" font-size="10" fill="var(--sub)">U(W)</text>
+
+    <path d="${d}" fill="none" stroke="${type.color}" stroke-width="2"/>
+
+    <line x1="${Apx}" y1="${Apy}" x2="${Bpx}" y2="${Bpy}" stroke="${type.color}" stroke-width="1" stroke-dasharray="3 3" opacity="0.55"/>
+
+    ${gapH > 1.5 ? `<line x1="${Npx}" y1="${gapY}" x2="${Npx}" y2="${gapY+gapH}" stroke="#c94b4b" stroke-width="1.4" stroke-dasharray="2 2"/>` : ''}
+
+    ${showCE ? `
+    <!-- horizontal line at E[U(W)] level, from the E[U(W)] point to where it meets the curve (= CE) -->
+    <line x1="${Mpx}" y1="${Mpy}" x2="${CEpx}" y2="${CEpy}" stroke="${CE_COLOR}" stroke-width="1.3" stroke-dasharray="4 3"/>
+    <!-- vertical projection of CE down onto the x-axis -->
+    <line x1="${CEpx}" y1="${CEpy}" x2="${CEpx}" y2="${PYBOT}" stroke="${CE_COLOR}" stroke-width="1.3" stroke-dasharray="4 3"/>
+    <!-- vertical projection of E[W] (where U(E[W]) sits) down onto the x-axis -->
+    <line x1="${Npx}" y1="${PYBOT}" x2="${Npx}" y2="${Npy}" stroke="#9a9a94" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>
+    <!-- CE point, on the curve -->
+    <circle cx="${CEpx}" cy="${CEpy}" r="3.6" fill="${CE_COLOR}"/>
+    <text class="point-label" x="${CEpx}" y="${CEpy-8}" text-anchor="middle" fill="${CE_COLOR}">CE</text>
+    <!-- CE marker on the x-axis -->
+    <circle cx="${CEpx}" cy="${PYBOT}" r="2.8" fill="${CE_COLOR}"/>
+    <!-- risk premium: distance between CE and E[W] on the x-axis -->
+    <line x1="${rpLeft}" y1="${PYBOT}" x2="${rpRight}" y2="${PYBOT}" stroke="${RP_COLOR}" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+    <text class="point-label" x="${rpMid}" y="${PYBOT+15}" text-anchor="middle" fill="${RP_COLOR}">RP</text>
+    ` : ''}
+
+    <circle cx="${Npx}" cy="${Npy}" r="3.2" fill="#c94b4b"/>
+    <text class="point-label" x="${Npx-6}" y="${Npy-4}" text-anchor="end" fill="#c94b4b">U(E[W])</text>
+
+    <circle cx="${Mpx}" cy="${Mpy}" r="3.2" fill="${type.color}"/>
+    <text class="point-label" x="${Mpx+6}" y="${Mpy+11}" fill="${type.color}">E[U(W)]</text>
+
+    <g class="drag-point" data-point="A" style="cursor:grab;">
+      <circle cx="${Apx}" cy="${Apy}" r="7" fill="#f2a623" stroke="#fff" stroke-width="1.5"/>
+      <text class="point-label" x="${Apx}" y="${Apy-11}" text-anchor="middle" fill="#8a5a0f">No disaster</text>
+    </g>
+    <g class="drag-point" data-point="B" style="cursor:grab;">
+      <circle cx="${Bpx}" cy="${Bpy}" r="7" fill="#378add" stroke="#fff" stroke-width="1.5"/>
+      <text class="point-label" x="${Bpx}" y="${Bpy+18}" text-anchor="middle" fill="#185fa5">Disaster</text>
+    </g>
+  `;
+
+  return {EW, Uno, Udis, EU, U_EW};
+}
+
+function renderStats(type, vals){
+  const {EW, Uno, Udis, EU, U_EW} = vals;
+  const statsEl = document.querySelector(`[data-stats="${type.key}"]`);
+  const decisionEl = document.querySelector(`[data-decision="${type.key}"]`);
+
+  const diff = EU - U_EW;
+  const CE = type.finv(EU);
+  const RP = EW - CE;
+
+  statsEl.innerHTML = `
+    <div class="row"><span>E(W) expected wealth</span><span>$${money(EW)}k</span></div>
+    <div class="row"><span>U(no disaster)</span><span>${fmt(Uno,3)}</span></div>
+    <div class="row"><span>U(disaster)</span><span>${fmt(Udis,3)}</span></div>
+    <div class="divider"></div>
+    <div class="row"><span>E[U(W)] expected utility</span><span>${fmt(EU,3)}</span></div>
+    <div class="row"><span>U(E[W]) utility of certain wealth</span><span>${fmt(U_EW,3)}</span></div>
+    <div class="divider"></div>
+    <div class="row"><span>Certainty equivalent CE</span><span>$${money(CE)}k</span></div>
+    <div class="row"><span>Risk premium RP = E(W) − CE</span><span>$${money(RP)}k</span></div>
+  `;
+
+  let cls, title, sub;
+  if(diff < -1e-6){
+    cls = 'buy';
+    title = 'Insurance recommended';
+    sub = `E[U(W)] < U(E[W]) — volatility itself reduces utility. As long as the premium is below the risk premium of $${money(RP)}k, buying insurance pays off.`;
+  } else if(diff > 1e-6){
+    cls = 'skip';
+    title = 'Insurance not recommended';
+    sub = `E[U(W)] > U(E[W]) — this person actually prefers the gamble. The risk premium is negative, so they won't pay to avoid risk.`;
+  } else {
+    cls = 'indiff';
+    title = 'Indifferent either way';
+    sub = 'E[U(W)] = U(E[W]) — only expected wealth matters. Whether to buy depends solely on whether the premium is actuarially fair.';
+  }
+  decisionEl.className = 'decision ' + cls;
+  decisionEl.innerHTML = `<span>${title}<span class="sub">${sub}</span></span>`;
+}
+
+function renderAll(){
+  document.getElementById('storyWno').textContent = money(state.Wno,0);
+  document.getElementById('storyWdis').textContent = money(state.Wdis,0);
+  document.getElementById('storyP').textContent = fmt(state.p*100,0);
+
+  TYPES.forEach(type=>{
+    const svg = document.querySelector(`svg[data-type="${type.key}"]`);
+    const vals = renderChart(svg, type);
+    renderStats(type, vals);
+    attachDrag(svg, type.key);
+  });
+}
+
+function attachDrag(svg, typeKey){
+  svg.querySelectorAll('.drag-point').forEach(g=>{
+    g.onpointerdown = (e)=>{
+      dragging = { typeKey, point: g.dataset.point };
+      e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId);
+    };
+  });
+  svg.onpointermove = (e)=>{
+    if(!dragging || dragging.typeKey !== typeKey) return;
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+    const w = pxToW(svgP.x);
+    if(dragging.point === 'A') state.Wno = w;
+    else state.Wdis = w;
+    renderAll();
+  };
+  svg.onpointerup = ()=>{ dragging = null; };
+  svg.onpointerleave = ()=>{ dragging = null; };
+}
+
+function init(){
+  const grid = document.getElementById('cardGrid');
+  TYPES.forEach(type => grid.appendChild(buildCard(type)));
+
+  const pSlider = document.getElementById('pSlider');
+  pSlider.addEventListener('input', ()=>{
+    state.p = Number(pSlider.value)/100;
+    document.getElementById('pVal').textContent = pSlider.value + '%';
+    renderAll();
+  });
+
+  renderAll();
+}
+
+init();
+</script>
+</body>
+</html>
