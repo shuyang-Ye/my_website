@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>莫比乌斯环 · 切割实验</title>
+<style>
+:root{--ink:#14253c;--muted:#647385;--teal:#009e9a;--line:#dce3e9;--soft:#f0f4f6}
+*{box-sizing:border-box}body{margin:0;background:white;color:var(--ink);font:15px/1.7 "Microsoft YaHei","Segoe UI",sans-serif}main{max-width:1500px;margin:auto;padding:28px 32px}header{display:flex;align-items:center;gap:26px;margin-bottom:24px}h1{font:700 40px/1.2 Georgia,"SimSun",serif;margin:0}header p{border-left:1px solid #aeb8c4;padding-left:26px;color:var(--muted);font-size:18px;margin:0}h2{font-size:23px;margin:0 0 18px}h3{font-size:20px;margin:0 0 10px}p{margin:8px 0 16px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:26px}.stage{position:relative;background:#eef2f4;border-radius:8px;overflow:hidden;height:550px}canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}canvas:active{cursor:grabbing}.stage-top{position:absolute;top:18px;left:22px;right:18px;display:flex;justify-content:space-between;pointer-events:none;color:#526577;font-size:13px}.stage-top button{pointer-events:auto;padding:5px 10px;font-size:12px;background:#ffffffc9}.hint{position:absolute;bottom:16px;width:100%;text-align:center;color:#647385;font-size:12px;pointer-events:none}.legend{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.legend>span{white-space:nowrap}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--teal);margin-right:5px}.gold{background:#dd9a37}.controls{display:flex;align-items:center;gap:12px;padding:20px 0;flex-wrap:wrap}button,select{font:inherit;border:1px solid var(--line);border-radius:7px;padding:9px 15px;background:white;color:var(--ink);cursor:pointer}button:hover{border-color:var(--teal);background:#f0faf9}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #e5ae48;outline-offset:3px}.primary{background:var(--teal);color:white;border-color:var(--teal);min-width:104px}.primary:hover{background:#008a87;color:white}.secondary{background:var(--soft)}input[type=range]{accent-color:var(--teal);cursor:pointer;min-width:80px}.timeline{flex:1;display:flex;gap:12px;align-items:center;min-width:170px}.timeline input{width:100%}output{white-space:nowrap;font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted)}label{color:var(--muted);font-size:13px}select{padding:7px;font-size:13px}aside{border-left:1px solid var(--line);padding-left:25px}.choice{width:100%;display:flex;align-items:center;gap:16px;padding:18px 16px;margin-bottom:12px;text-align:left;font-size:16px}.choice svg{width:56px;height:36px;flex-shrink:0}.choice[aria-pressed=true]{border-color:var(--teal);background:#e7f6f5}.radio{margin-left:auto;border:2px solid #acb6c2;width:17px;height:17px;border-radius:50%;flex-shrink:0}.choice[aria-pressed=true] .radio{border:5px solid var(--teal)}.result{border-top:1px solid var(--line);margin-top:25px;padding-top:24px}.result p{color:var(--muted);font-size:14px}.route{font:600 23px/1.5 Georgia,serif;letter-spacing:2px;color:var(--teal);margin:18px 0 10px}.extras{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}.extras button{font-size:13px;padding:6px 11px}.extras button[aria-pressed=true]{border-color:var(--teal);background:#e7f6f5}.explain{display:grid;grid-template-columns:1.35fr 1fr;gap:30px;border-top:1px solid var(--line);padding-top:23px;margin-top:2px}.explain p{color:var(--muted);font-size:14px}.seam{border-left:1px solid var(--line);padding-left:28px}.seam svg{width:100%;max-width:400px;height:110px}.note{font-size:12px!important;color:#778594!important}a{color:#008b87}#phase{font-weight:600}.mobile-note{display:none}
+@media(min-width:1450px){.stage{height:610px}}
+@media(max-width:1000px){main{padding:22px}.layout{grid-template-columns:minmax(0,1fr) 280px;gap:18px}aside{padding-left:18px}.stage{height:490px}.choice{font-size:14px;padding:15px 10px;gap:8px}.choice svg{width:40px}h1{font-size:32px}.controls{gap:8px}}
+@media(max-width:720px){main{padding:18px 16px}header{display:block;margin-bottom:18px}header p{border:0;padding:0;margin-top:8px;font-size:14px}h1{font-size:32px}.layout{display:flex;flex-direction:column}.stage{height:380px}aside{border:0;padding:0}.choice{padding:12px 16px}.choice svg{width:52px}.result{margin-top:18px;padding-top:18px}.explain{grid-template-columns:1fr;margin-top:24px;gap:16px}.seam{border:0;padding:0}.controls{padding-bottom:8px}.timeline{flex-basis:100%}.stage-top{left:12px;right:12px;font-size:11px}.legend{gap:7px}}
+.custom-cut{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}.custom-cut input{width:80px;padding:8px;border:1px solid var(--line);border-radius:7px;font:inherit;color:var(--ink)}.custom-cut button{font-size:13px}.custom-note{font-size:12px;color:var(--muted)}
+</style></head><body><main>
+<header><h1>莫比乌斯环</h1><p>一次扭转，改变连接方式</p></header>
+<div class="layout"><section aria-label="三维交互演示">
+<div class="stage"><canvas id="scene" aria-label="可拖动旋转的莫比乌斯带三维曲面" tabindex="0"></canvas>
+<div class="stage-top"><span id="phase" aria-live="polite">原始纸带 · 半扭转 180°</span><button id="view">复位视角</button></div>
+<div class="hint">拖动旋转 · 滚轮缩放 · 聚焦画布后用方向键旋转</div></div>
+<div class="controls"><button class="primary" id="play">播放</button><button class="secondary" id="reset">重置</button><label for="speed">速度</label><select id="speed"><option value="0.25">0.25×</option><option value="0.5" selected>0.5×</option><option value="1">1×</option><option value="2">2×</option></select><div class="timeline"><input id="progress" aria-label="动画进度" type="range" min="0" max="1000" value="0"><output id="time">0.0 / 16 秒</output></div></div>
+<div class="legend" id="legend"></div>
+</section><aside><h2>选择切法</h2>
+<button class="choice" data-mode="original" aria-pressed="true"><svg viewBox="0 0 60 36" aria-hidden="true"><ellipse cx="30" cy="10" rx="24" ry="7" fill="#d9e1e6" stroke="#8b98a7"/><path d="M6 10v16c6 10 42 10 48 0V10" fill="#edf1f4" stroke="#8b98a7"/></svg>原始纸带<span class="radio"></span></button>
+<button class="choice" data-mode="half" aria-pressed="false"><svg viewBox="0 0 60 36" aria-hidden="true"><path d="M5 9Q30 -2 55 9V28Q30 39 5 28Z" fill="#edf1f4" stroke="#8b98a7"/><path d="M5 18Q30 29 55 18" stroke="#009e9a" stroke-dasharray="4 3" fill="none"/></svg>沿 1/2 中线剪开<span class="radio"></span></button>
+<button class="choice" data-mode="third" aria-pressed="false"><svg viewBox="0 0 60 36" aria-hidden="true"><path d="M5 9Q30 -2 55 9V28Q30 39 5 28Z" fill="#edf1f4" stroke="#8b98a7"/><path d="M5 14Q30 25 55 14M5 23Q30 34 55 23" stroke="#009e9a" stroke-dasharray="4 3" fill="none"/></svg>沿 1/3、2/3 剪开<span class="radio"></span></button>
+<button class="choice" data-mode="custom" aria-pressed="false">每隔 1/n 带宽全部剪开<span class="radio"></span></button>
+<form id="customForm" class="custom-cut"><label for="denominator">n =</label><input id="denominator" type="number" min="2" max="100" step="1" value="4" required aria-label="分母 n，2 到 100 的整数"><button type="submit">应用并播放</button></form>
+<p class="custom-note">n 为 2–100 的整数。沿 1/n、2/n、…、(n−1)/n 全部剪开。互相连接的切线连续剪，不重复剪。颜色预示切完后的不同纸带。</p>
+<div class="result"><h3 id="resultTitle"></h3><p id="resultText"></p><div class="route" id="route"></div><p id="routeText"></p><div class="extras"><button id="finish">查看切后结果</button><button id="trace" aria-pressed="true">路径光点：开</button><button id="spin" aria-pressed="false">自动旋转：关</button></div></div>
+</aside></div>
+<section class="explain"><div><h2 id="whyTitle"></h2><p id="why"></p><p class="note">切缝会适度张开以便观察；保持原曲面的接缝连接与套连关系，不代表纸张受力后的自然形状。1/n 指展开纸带的带宽位置，不是沿周长截断。n 较大时每条纸带较细，可缩放观察；切缝自动缩小，避免吞掉窄带。</p><p class="note">参考：<a href="https://www.scientificamerican.com/article/mathematical-games-1957-06/" target="_blank" rel="noreferrer">Scientific American · Möbius Bands</a></p></div><div class="seam"><h3>把接缝展开来看</h3><div style="max-height:260px;overflow:auto"><svg id="seam" viewBox="0 0 400 110" role="img" aria-label="半扭转接缝使上下两侧交换"></svg></div><p id="seamText"></p></div></section>
+</main><script>
+'use strict';
+const $=id=>document.getElementById(id), TAU=Math.PI*2;
+const canvas=$('scene'),ctx=canvas.getContext('2d');
+const state={mode:'original',n:4,t:0,playing:false,speed:.5,yaw:-.48,pitch:.91,zoom:1,trace:true,spin:false,walk:0};
+const content={
+ original:{title:'一张纸带，一个面，一条边',text:'将长纸条的一端扭转 180°，再与另一端粘合，就得到莫比乌斯环。点击一种切法，观察剪刀如何沿纵向前进。',route:'(0, v) ↔ (2π, −v)',rt:'跨过接缝时，带宽方向会翻转。',whyTitle:'为什么没有普通纸环的“内外两面”？',why:'沿着纸带表面一直走，不跨越边缘，也能走到看似“背面”的位置。接缝把带宽坐标 v 接到了 −v；这种半扭转，正是切开后结果不同的原因。'},
+ half:{title:'切完后：仍然是一个长环',text:'沿中线绕原环一圈，得到一条长度约为原来两倍、宽度约为一半的双面带。它仍连成一个环，展开整理后带有两个整扭转。',route:'A → B → A',rt:'白点先走过 A，再跨接缝走过 B；绕原环两圈才回到起点。',whyTitle:'为什么没有分成两个环？',why:'展开看，中线两侧是 A、B 两条带。但半扭转让 A 的末端接到 B 的起端，B 的末端接回 A。剪开中线只是分开两条带的侧边，并没有剪断它们在接缝处的连接，所以 A 和 B 合起来仍是一条闭合长带。'},
+ third:{title:'切完后：两个环，彼此套连',text:'从带宽 1/3 处开始，绕一圈后会接到展开图的 2/3 处，再绕一圈才闭合。结果是一个短的莫比乌斯环，与一个长度约两倍的双面长环套在一起。',route:'A → C → A   ·   B → B',rt:'青色是外侧 A、C 连成的长环，金色是中间 B 构成的短环。',whyTitle:'为什么是两个套连的环，而不是三个？',why:'切割后，展开图有 A、B、C 三条带。半扭转使 A 与 C 首尾相接，组成同一个长环；中间的 B 则与自己相接，保留莫比乌斯带的半扭转。两部分不再粘连，但在空间中彼此套住，不能不剪断就拿开。'}
+};
+// The half-twist identifies region i with n-1-i, and cut k with n-k.
+function denominator(){return state.mode==='original'?1:state.mode==='half'?2:state.mode==='third'?3:state.n}
+function componentCount(){return Math.ceil(denominator()/2)}
+function cutOrder(){const n=denominator(),order=[];for(let k=1;k<=Math.floor(n/2);k++){order.push(k);if(k!==n-k)order.push(n-k)}return order}
+function color(id,light=1){const hues=[178,38,264,346,210,95];const h=id<hues.length?hues[id]:(id*137.508)%360;return `hsl(${h} 62% ${29+light*24}%)`}
+function currentContent(){
+ if(state.mode!=='custom')return content[state.mode];
+ const n=denominator(),count=componentCount();
+ if(n===2)return content.half;
+ return {title:`切完后：${count} 个环`,
+ text:`在展开图的 ${n-1} 条等分线上全部剪开。切线 k/${n} 与 (${n}−k)/${n} 接成同一闭合路径，共 ${Math.floor(n/2)} 条独立切割路径。结果为 ${Math.floor(n/2)} 条双面长环${n%2?'和 1 条中间的莫比乌斯环':''}，每条带宽均为 W/${n}。`,
+ route:`第 i 区 ↔ 第 ${n}+1−i 区`,
+ rt:`区域从 1 编号到 ${n}；同色区域跨接缝相连，是同一条纸带。不同颜色代表切完后的不同环。`,
+ whyTitle:`为什么 ${n} 个区域会组成 ${count} 个环？`,
+ why:`半扭转把第 1 区接到第 ${n} 区、第 2 区接到第 ${n-1} 区，依此类推。每对区域形成一条长度约 2L 的双面环。${n%2?`n 是奇数，中间第 ${(n+1)/2} 区与自己相接，保留一条长度约 L 的莫比乌斯环。`:'n 是偶数，所有区域都两两配对，没有单独留下的莫比乌斯环。'}所以环数为 ⌈n/2⌉。这些环仍在空间中套连；颜色表示连接关系，不表示能把它们直接拿开。L、W 为原纸带的长度与宽度。`};
+}
+function duration(){return state.mode==='original'?16:8*(denominator()-1)+8}
+function cut(){return Math.min(state.t/.76,1)}
+function expansion(){return Math.max(0,(state.t-.76)/.24)}
+function updateUI(){
+ const c=currentContent();$('resultTitle').textContent=c.title;$('resultText').textContent=c.text;$('route').textContent=c.route;$('routeText').textContent=c.rt;$('whyTitle').textContent=c.whyTitle;$('why').textContent=c.why;
+ document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===state.mode));
+ const n=denominator(),count=componentCount();
+ $('legend').innerHTML=Array.from({length:count},(_,i)=>`<span><i class="dot" style="background:${color(i)}"></i>${state.mode==='original'?'原始纸带':`环 ${i+1}${n%2&&i===count-1?'（莫比乌斯环）':'（双面长环）'}`}</span>`).join('')+'<span class="note">白色光点：沿每条纸带行走</span>';
+ $('finish').hidden=state.mode==='original';
+ const rows=state.mode==='original'?2:n,height=Math.max(110,rows*22+24),rowH=(height-24)/rows;
+ let svg='';for(let i=0;i<rows;i++){const y=8+i*rowH,id=state.mode==='original'?0:Math.min(i,n-1-i);svg+=`<rect x="38" y="${y}" width="218" height="${rowH-2}" fill="${color(id)}" opacity=".6"/><text x="4" y="${y+rowH/2+5}" fill="#14253c">${i+1}</text><text x="270" y="${y+rowH/2+5}" fill="#14253c">${rows-i}</text>`}
+ svg+=`<text x="38" y="${height-2}" font-size="12" fill="#647385">左侧区域序号 → 半扭转后的对接区域序号</text>`;
+ $('seam').setAttribute('viewBox',`0 0 400 ${height}`);$('seam').style.height=height+'px';$('seam').innerHTML=svg;
+ $('seamText').textContent=state.mode==='original'?'半扭转使上下两侧交换。':`共有 ${n} 个等宽区域，按 i ↔ ${n+1}−i 配对，形成 ${count} 条不同纸带。`;
+ updateTime();
+}
+function updateTime(){
+ $('progress').value=Math.round(state.t*1000);$('time').textContent=`${(state.t*duration()).toFixed(1)} / ${duration()} 秒`;$('play').textContent=state.playing?'暂停':state.t>=1?'重播':'播放';
+ let phase='原始纸带 · 半扭转 180°';
+ if(state.mode!=='original'){
+  const n=denominator(),order=cutOrder(),step=Math.min(order.length-1,Math.floor(cut()*order.length)),k=order[step];
+  phase=state.t===0?`准备剪开 · ${n-1} 条等分线`:cut()<1?`路径 ${Math.min(k,n-k)}/${Math.floor(n/2)} · 剪 ${k}/${n} · ${Math.round(cut()*100)}%`:state.t<1?'全部切完 · 张开切缝观察':`切后结果 · ${componentCount()} 个环`;
+ }
+ $('phase').textContent=phase;
+}
+function choose(mode){
+ if(mode==='custom'){
+  if(!$('denominator').reportValidity())return;
+  state.n=Number($('denominator').value);
+ }
+ Object.assign(state,{mode,t:0,playing:mode!=='original',walk:0});updateUI()}
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>choose(b.dataset.mode));
+$('customForm').onsubmit=e=>{e.preventDefault();choose('custom')};
+$('play').onclick=()=>{if(state.t>=1){state.t=0;state.walk=0}state.playing=!state.playing;updateTime()};
+$('reset').onclick=()=>{state.t=0;state.walk=0;state.playing=false;updateTime()};
+$('finish').onclick=()=>{state.t=1;state.playing=false;updateTime()};
+$('speed').onchange=e=>state.speed=Number(e.target.value);
+$('progress').oninput=e=>{state.t=Number(e.target.value)/1000;state.playing=false;state.walk=state.t*12;updateTime()};
+$('view').onclick=()=>Object.assign(state,{yaw:-.48,pitch:.91,zoom:1});
+for(const [id,key,label] of [['trace','trace','路径光点'],['spin','spin','自动旋转']]){$(id).onclick=()=>{state[key]=!state[key];$(id).textContent=label+'：'+(state[key]?'开':'关');$(id).setAttribute('aria-pressed',state[key])}}
+let drag=null;canvas.onpointerdown=e=>{drag=[e.clientX,e.clientY];canvas.setPointerCapture(e.pointerId)};
+canvas.onpointermove=e=>{if(!drag)return;state.yaw+=(e.clientX-drag[0])*.008;state.pitch=Math.max(-1.5,Math.min(1.5,state.pitch+(e.clientY-drag[1])*.008));drag=[e.clientX,e.clientY]};
+canvas.onpointerup=canvas.onpointercancel=()=>drag=null;
+canvas.addEventListener('wheel',e=>{e.preventDefault();state.zoom=Math.max(.55,Math.min(1.8,state.zoom*Math.exp(-e.deltaY*.001)))},{passive:false});
+canvas.onkeydown=e=>{if(e.key.startsWith('Arrow')){e.preventDefault();state.yaw+=e.key==='ArrowRight'?.1:e.key==='ArrowLeft'?-.1:0;state.pitch=Math.max(-1.5,Math.min(1.5,state.pitch+(e.key==='ArrowDown'?.1:e.key==='ArrowUp'?-.1:0)))}};
+let W=800,H=550;new ResizeObserver(()=>{const r=canvas.getBoundingClientRect();W=r.width;H=r.height;const d=Math.min(devicePixelRatio,2);canvas.width=Math.round(W*d);canvas.height=Math.round(H*d);ctx.setTransform(d,0,0,d,0,0)}).observe(canvas);
+function point(u,v){const r=2.65+v*Math.cos(u/2);return[r*Math.cos(u),r*Math.sin(u),v*Math.sin(u/2)]}
+function rotate(p){const c=Math.cos(state.yaw),s=Math.sin(state.yaw),x=p[0]*c-p[1]*s,y=p[0]*s+p[1]*c;return[x,y*Math.cos(state.pitch)-p[2]*Math.sin(state.pitch),y*Math.sin(state.pitch)+p[2]*Math.cos(state.pitch)]}
+function project(p){const q=rotate(p),k=Math.min(W/8.7,H/7.5)*(W>600?1.24:1)*state.zoom*12/(12-q[2]);return[W/2+q[0]*k,H/2-q[1]*k,q[2]]}
+function bands(){const n=denominator();return Array.from({length:n},(_,i)=>[-1+2*i/n,-1+2*(i+1)/n,Math.min(i,n-1-i)])}
+// One lap per line; mirrored lines form a continuous two-lap path.
+function doneAt(u,boundary){if(cut()>=1)return 1;const n=denominator(),k=Math.round((boundary+1)*n/2),index=k<=n/2?2*(k-1):2*(n-k-1)+1;return cut()*(n-1)>index+u/TAU?1:0}
+function widthAt(u,v,band){let[a,b]=band;const gap=Math.min(.025+.19*expansion(),(b-a)*.3);const left=a>-1?gap*doneAt(u,a):0,right=b<1?gap*doneAt(u,b):0;return a+left+(v-a)/(b-a)*(b-a-left-right)}
+function pos(u,v,b){return point(u,widthAt(u,v,b))}
+function draw(){
+ ctx.clearRect(0,0,W,H);
+ ctx.save();ctx.translate(W/2,H*.76);ctx.scale(1,.23);const shadow=ctx.createRadialGradient(0,0,0,0,0,W*.32);shadow.addColorStop(0,'rgba(74,96,110,.17)');shadow.addColorStop(1,'rgba(74,96,110,0)');ctx.fillStyle=shadow;ctx.fillRect(-W*.32,-W*.32,W*.64,W*.64);ctx.restore();
+ const items=[],bs=bands(),N=denominator()>20?112:176,M=Math.max(1,Math.floor(12/denominator()));
+ for(const band of bs){const[a,b,col]=band;for(let i=0;i<N;i++){const u=i/N*TAU,un=(i+1)/N*TAU;for(let j=0;j<M;j++){const v=a+(b-a)*j/M,vn=a+(b-a)*(j+1)/M;const p=[pos(u,v,band),pos(un,v,band),pos(un,vn,band),pos(u,vn,band)],q=p.map(project);
+ const e=p[1].map((x,k)=>x-p[0][k]),f=p[3].map((x,k)=>x-p[0][k]),n=rotate([e[1]*f[2]-e[2]*f[1],e[2]*f[0]-e[0]*f[2],e[0]*f[1]-e[1]*f[0]]),len=Math.hypot(...n)||1,light=.45+.55*Math.abs((n[0]*.2+n[1]*-.4+n[2]*.9)/len);
+ items.push({kind:0,q,z:q.reduce((s,x)=>s+x[2],0)/4,fill:color(col,light)});}
+ for(const edge of [a,b]){const q=[project(pos(u,edge,band)),project(pos(un,edge,band))];items.push({kind:1,q,z:(q[0][2]+q[1][2])/2+.008,color:color(col,1.5),width:1})}}
+ }
+ // Uncut guides stay on the original surface; completed portions become gaps.
+ if(state.mode!=='original'){
+  const order=cutOrder(),n=denominator();
+  for(const k of order){const v=-1+2*k/n;for(let i=0;i<N;i++){const u=i/N*TAU;if(doneAt(u,v)||i%6>2)continue;const q=[project(point(u,v)),project(point((i+1)/N*TAU,v))];items.push({kind:1,q,z:(q[0][2]+q[1][2])/2+.025,color:'#f7e9af',width:1.4})}}
+  if(cut()>0&&cut()<1){const progress=cut()*order.length,index=Math.floor(progress),u=(progress-index)*TAU,v=-1+2*order[index]/n,q=project(point(u,v));items.push({kind:2,q,z:q[2]+.04,color:'#ffda75',r:6})}
+ }
+ if(state.trace){
+  const u=(state.walk*.65)%(TAU*2),n=denominator();
+  for(let id=0;id<componentCount();id++){const index=u>=TAU?n-1-id:id,band=bs[index],v=(band[0]+band[1])/2,q=project(pos(u%TAU,v,band));items.push({kind:2,q,z:q[2]+.045,color:'#ffffff',r:n>20?2:4.5})}
+ }
+ items.sort((a,b)=>a.z-b.z);for(const item of items){ctx.beginPath();if(item.kind===2){ctx.arc(item.q[0],item.q[1],item.r,0,TAU);ctx.fillStyle=item.color;ctx.fill();ctx.strokeStyle='#294b5c';ctx.lineWidth=1;ctx.stroke();continue}ctx.moveTo(item.q[0][0],item.q[0][1]);for(let k=1;k<item.q.length;k++)ctx.lineTo(item.q[k][0],item.q[k][1]);if(item.kind===0){ctx.closePath();ctx.fillStyle=item.fill;ctx.fill();ctx.strokeStyle=item.fill;ctx.lineWidth=1.1;ctx.stroke()}else{ctx.strokeStyle=item.color;ctx.lineWidth=item.width;ctx.stroke()}}
+}
+let last=0;function frame(now){const dt=Math.min((now-last)/1000,.05);last=now;if(!document.hidden){if(state.playing){state.t=Math.min(1,state.t+dt*state.speed/duration());state.walk+=dt*state.speed;if(state.t>=1)state.playing=false;updateTime()}else if(state.t===1&&state.trace){state.walk+=dt*state.speed}if(state.spin)state.yaw+=dt*.16;draw()}requestAnimationFrame(frame)}
+// Exposed for reproducible geometry / UI checks, with no external dependencies.
+window.mobius={state,point,bands,choose,draw,pos,widthAt,denominator,componentCount,cutOrder,doneAt,color};updateUI();requestAnimationFrame(frame);
+</script></body></html>
